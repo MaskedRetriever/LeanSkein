@@ -6,7 +6,7 @@ class Fill {
   boolean debugFlag;
   int Width;
   int Height;
-  Extruder ExtruderProperties;
+  //Extruder ExtruderProperties;
   float SparseFillDensity;
   float RotateFillAngle;
   SSArea SparseFill;
@@ -23,10 +23,11 @@ class Fill {
     } else {
       SparseFillDensity=fillDensity;
     }
-    ExtruderProperties = new Extruder();
+    //ExtruderProperties = new Extruder();
     SparseFill = new SSArea();
     SparseFill.setGridScale(0.01);
-    float wallWidth=ExtruderProperties.calcWallWidth();
+    //float wallWidth=ExtruderProperties.calcWallWidth();
+    float wallWidth = MyConfig.WallWidth;
     for(float dx=0;dx<2*Width; dx+=2*wallWidth/fillDensity) {
       Rectangle2D thisRect=new Rectangle2D.Float(dx,0,wallWidth/fillDensity,2*Height);
       Area thisRectArea=new Area(thisRect);
@@ -49,7 +50,8 @@ class Fill {
 
   ArrayList GenerateFill(ArrayList SliceList) {
     ArrayList FillAreaList = new ArrayList();
-    float wallWidth=ExtruderProperties.calcWallWidth();
+    //float wallWidth=ExtruderProperties.calcWallWidth();
+    float wallWidth = MyConfig.WallWidth;
     for(int LayerNum=0; LayerNum<SliceList.size();LayerNum++) {
       SSArea thisArea = (SSArea) SliceList.get(LayerNum);
       // Shell area to subtract off slice.

@@ -108,12 +108,13 @@ void setup(){
 
   //File Write
   println("Starting GCODE Write");
-  String GCodeFileName = FileName + ".gcode";
+  String GCodeFileName = MyConfig.GCodeFile;
 
   FileWriteTrigger=false;//Only do this once per command.
   FileWriteFraction=0.1;
 
   ArrayList SliceAreaList = new ArrayList();
+  if(debugFlag) println("Slicing...");
   for(float ZLevel = 0;ZLevel<(STLFile.bz2-LayerThickness);ZLevel=ZLevel+LayerThickness)
   {
     Slice ThisSlice = new Slice(STLFile,ZLevel);
@@ -121,13 +122,14 @@ void setup(){
     int SliceNum = round(ZLevel / LayerThickness);
     thisArea = new SSArea();
     thisArea.setGridScale(0.01);
-    if(debugFlag) println("\n  GridScale: "+thisArea.GridScale);
+    if(debugFlag) println("GridScale: "+thisArea.GridScale + "  Slice at: " + ZLevel);
     thisArea.Slice2Area(ThisSlice);
     SliceAreaList.add(SliceNum, thisArea);
   }
   FileWriteFraction=0.2;
   redraw();
   ArrayList ShellAreaList = new ArrayList();
+  if(debugFlag) println("Shelling...");
   for(int ShellNum=0;ShellNum<SliceAreaList.size();ShellNum++)
   {
     SSArea thisArea = (SSArea) SliceAreaList.get(ShellNum);
@@ -140,12 +142,14 @@ void setup(){
     thisSubArea.add(thisArea);
     thisSubArea.subtract(thisShell);
     ShellAreaList.add(ShellNum,thisSubArea);
+    if(debugFlag) println("Shelled " + ShellNum + " Of " + SliceAreaList.size());
   }
   FileWriteFraction=0.3;
-  redraw();
-  Fill areaFill=new Fill(true,round(BuildPlatformWidth),round(BuildPlatformHeight),0.2);
+  if(debugFlag) println("Generating Fill...");
+  Fill areaFill=new Fill(true,round(BuildPlatformWidth),round(BuildPlatformHeight),MyConfig.FillDensity);
   ArrayList FillAreaList = areaFill.GenerateFill(ShellAreaList);
 
+  if(debugFlag) println("Writing GCode...");
   FileWriteFraction=0.5;
   redraw();
   AreaWriter gcodeOut=new AreaWriter(debugFlag,round(BuildPlatformWidth),round(BuildPlatformHeight));

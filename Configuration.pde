@@ -12,29 +12,45 @@ class Configuration {
   float PreScale;
   float XRotate;  
   String FileName;
+  String GCodeFile;
   
   float PrintHeadSpeed;
   float LayerThickness;
   float Sink;
+  float Diameter;
+  float FillDensity;
   int OperatingTemp;
   int FlowRate;
   int PlatformTemp;
   boolean DoShells;
   boolean DoFill;
   
+  //Derived configuration values
+  float WallWidth;
+  
   //config values of last resort
   Configuration() {
     PreScale = 1.0;
     XRotate = 0;
     FileName="";  
+    GCodeFile="oops.gcode";
     PrintHeadSpeed = 2000.0;
     LayerThickness = 0.3;
     Sink = 2;
+    Diameter = 0.6;
     OperatingTemp = 220;
     PlatformTemp = 120;
     FlowRate = 180;
+    FillDensity = 0.1;
     DoFill=false;
     DoShells=false;  
+    
+    CalcDerivedParameters();
+  }
+
+  void CalcDerivedParameters(){
+    WallWidth = (3.1415 * Diameter*Diameter / 4)/LayerThickness;
+    
   }
 
   void Load(){
@@ -46,6 +62,7 @@ class Configuration {
         if(pieces[0].equals("CONFIG_SCALE"))PreScale=Float.parseFloat(pieces[1]);  
         if(pieces[0].equals("CONFIG_STLFILE"))FileName=pieces[1];  
         if(pieces[0].equals("CONFIG_XROTATE"))XRotate=Float.parseFloat(pieces[1]);  
+        if(pieces[0].equals("CONFIG_FILLDENSITY"))FillDensity=Float.parseFloat(pieces[1]);
         if(pieces[0].equals("MACHINE_OPTEMP"))OperatingTemp=Integer.parseInt(pieces[1]);  
         if(pieces[0].equals("MACHINE_FLOWRATE"))FlowRate=Integer.parseInt(pieces[1]);  
         if(pieces[0].equals("CONFIG_SINK"))Sink=Float.parseFloat(pieces[1]);  
@@ -54,27 +71,15 @@ class Configuration {
         if(pieces[0].equals("MACHINE_PLATFORMTEMP"))PlatformTemp=Integer.parseInt(pieces[1]);  
         if(pieces[0].equals("CONFIG_DOSHELLS"))DoShells = (Integer.parseInt(pieces[1])==1);  
         if(pieces[0].equals("CONFIG_DOFILL"))DoFill = (Integer.parseInt(pieces[1])==1);  
-        
+        if(pieces[0].equals("MACHINE_DIAMETER"))Diameter = (Float.parseFloat(pieces[1]));
+        if(pieces[0].equals("CONFIG_GCODEFILE"))GCodeFile=pieces[1];  
         
       }
       index=index+1;
     }
+    CalcDerivedParameters();
   }
-  
-  void Save(){
-    output = createWriter("config.txt");
-    output.print("CONFIG_SCALE\t" + PreScale + "\n");
-    output.print("CONFIG_XROTATE\t" + XRotate + "\n");
-    output.print("CONFIG_STLFILE\t" + FileName + "\n");
-    output.print("MACHINE_OPTEMP\t" + OperatingTemp + "\n");
-    output.print("MACHINE_FLOWRATE\t" + FlowRate + "\n");
-    output.print("CONFIG_SINK\t" + Sink + "\n");
-    output.print("MACHINE_PRINTHEADSPEED\t" + PrintHeadSpeed + "\n");
-    output.print("MACHINE_LAYERTHICKNESS\t" + LayerThickness + "\n");
-    
-    output.flush();
-    output.close();
-  }
+ 
 
 }
 

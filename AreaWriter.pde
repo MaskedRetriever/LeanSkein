@@ -44,11 +44,14 @@ class AreaWriter {
     GCodeOutput.println("G90");
     GCodeOutput.println("M103");
     GCodeOutput.println("M105");
-    GCodeOutput.println("M104 s"+OperatingTemp);
-    GCodeOutput.println("M109 s"+FlowRate);
+    GCodeOutput.println("M104 s"+OperatingTemp+" T0");
+    GCodeOutput.println("M108 s"+FlowRate+" T0");
+    GCodeOutput.println("M109 s"+MyConfig.PlatformTemp);
+    GCodeOutput.println("M6 T0 (Wait for toolhead to heat up.)");
     GCodeOutput.println("M101");
-    GCodeOutput.println("G1 X20.0 Y20.0 Z0.0 F"+PrintHeadSpeed/2);
-    GCodeOutput.println("G1 X0.0 Y20.0 Z0.0 F"+PrintHeadSpeed/2);
+    GCodeOutput.println("(End of startup commands.)");
+    GCodeOutput.println("G1 X20.0 Y20.0 Z"+LayerThickness+" F"+PrintHeadSpeed/2);
+    GCodeOutput.println("G1 X0.0 Y20.0 Z"+LayerThickness+" F"+PrintHeadSpeed/2);
   }
 
   void GCodeWriteFooter() {
@@ -64,7 +67,8 @@ class AreaWriter {
     int segType=pathIter.currentSegment(startCoords);
     // Move to starting point
     GCodeOutput.println("M103");
-    GCodeOutput.println("G1 X" + startCoords[0] + " Y" + startCoords[1] + " Z" + SliceNum*LayerThickness + " F" + PrintHeadSpeed);
+    //GCodeOutput.println("G1 X" + startCoords[0] + " Y" + startCoords[1] + " Z" + SliceNum*LayerThickness + " F" + PrintHeadSpeed);
+    GCodeOutput.println(G1String(startCoords[0],startCoords[1],SliceNum*LayerThickness,PrintHeadSpeed));
     GCodeOutput.println("M101");
     segType=pathIter.currentSegment(prevCoords);
     pathIter.next();
@@ -72,18 +76,18 @@ class AreaWriter {
       segType=pathIter.currentSegment(newCoords);
       if(segType == PathIterator.SEG_LINETO ) {
         // draw line from prevCoords to newCoords
-        GCodeOutput.println("G1 X" + newCoords[0] + " Y" + newCoords[1] + " Z" + SliceNum*LayerThickness + " F" + PrintHeadSpeed);
+        GCodeOutput.println(G1String(newCoords[0],newCoords[1],SliceNum*LayerThickness,PrintHeadSpeed));
         segType=pathIter.currentSegment(prevCoords);
       } else if(segType==PathIterator.SEG_CLOSE ) {
         // last segment of current path
-        GCodeOutput.println("G1 X" + newCoords[0] + " Y" + newCoords[1] + " Z" + SliceNum*LayerThickness + " F" + PrintHeadSpeed);
-        GCodeOutput.println("G1 X" + startCoords[0] + " Y" + startCoords[1] + " Z" + SliceNum*LayerThickness + " F" + PrintHeadSpeed);
+        GCodeOutput.println(G1String(newCoords[0],newCoords[1],SliceNum*LayerThickness,PrintHeadSpeed));
+        GCodeOutput.println(G1String(startCoords[0],startCoords[1],SliceNum*LayerThickness,PrintHeadSpeed));
         segType=pathIter.currentSegment(prevCoords);
       } else if(segType==PathIterator.SEG_MOVETO ) {
         // move to next starting point
         segType=pathIter.currentSegment(prevCoords);
         GCodeOutput.println("M103");
-        GCodeOutput.println("G1 X" + newCoords[0] + " Y" + newCoords[1] + " Z" + SliceNum*LayerThickness + " F" + PrintHeadSpeed);
+        GCodeOutput.println(G1String(newCoords[0],newCoords[1],SliceNum*LayerThickness,PrintHeadSpeed));
         GCodeOutput.println("M101");
         segType=pathIter.currentSegment(prevCoords);
         segType=pathIter.currentSegment(startCoords);
@@ -97,7 +101,7 @@ class AreaWriter {
   }
 
   void GCodeWriteModel(ArrayList SliceAreaList, ArrayList ShellAreaList, ArrayList FillAreaList) {
-    for(int SliceNum=0;SliceNum<SliceAreaList.size();SliceNum++)
+    for(int SliceNum=1;SliceNum<SliceAreaList.size();SliceNum++)
     {
       SSArea thisArea;
       if((ShellAreaList.size()>0)&MyConfig.DoShells) {
@@ -124,3 +128,8 @@ class AreaWriter {
 
 }
 
+String G1String(float X, float Y, float Z, float F)
+{
+  String G1String = "G1 X" + CleanFloat(X) + " Y" + CleanFloat(Y) + " Z" + CleanFloat(Z) + " F" + CleanFloat(F);
+  return G1String;
+}
